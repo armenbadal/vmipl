@@ -1,0 +1,10 @@
+; comment 1
+
+begin: enter
+       loadc 777
+       load  ; comment 2
+
+       jump loop
+        ; comment 3
+
+       return
