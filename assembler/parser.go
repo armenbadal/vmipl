@@ -2,26 +2,24 @@ package assembler
 
 import (
 	"bufio"
-	"fmt"
+	"container/list"
 	"sort"
+	"strconv"
 	"unicode"
 )
 
 type parser struct {
 	source *bufio.Reader
-	ch     rune
 	look   lexeme
 }
 
-type instruction struct {
-	label  string
-	name   string
-	number int
-	symbol string
+type parseError struct {
+	line    int
+	message string
 }
 
-func (ns instruction) print() {
-	fmt.Printf("'%s'\t'%s'\t'%d'\t'%s'\n", ns.label, ns.name, ns.number, ns.symbol)
+func (er *parseError) Error() string {
+	return er.message
 }
 
 // Քերկանաություն
@@ -35,47 +33,69 @@ func (ns instruction) print() {
 //             | KEYWORD INTEGER
 //             | KEYWORD IDENT .
 
-func (p *parser) parse() bool {
-	p.read()
+func (p *parser) parse() (*list.List, error) {
 	p.next()
 
 	for p.look.token == xNewLine {
 		p.next()
 	}
 
+	ast := list.New()
 	for p.look.token == xIdent || p.look.token == xKeyword {
-		p.parseLine().print()
+		el, err := p.parseLine()
+		if err != nil {
+			return nil, err
+		}
+		ast.PushBack(el)
 	}
 
-	return true
+	return ast, nil
 }
 
-func (p *parser) parseLine() instruction {
-	var instr instruction
+func (p *parser) parseLine() (*instruction, error) {
+	instr := new(instruction)
 
+	// պիտակը
 	if p.look.token == xIdent {
-		instr.label = p.look.value
-		p.next()
-		p.next()
-	}
-
-	if p.look.token == xKeyword {
-		instr.name = p.look.value
-		p.next()
-		if p.look.token == xNumber {
-			instr.number = 0
-			p.next()
-		} else if p.look.token == xIdent {
-			instr.symbol = p.look.value
-			p.next()
+		instr.label, _ = p.match(xIdent)
+		_, err := p.match(xColon)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	for p.look.token == xNewLine {
-		p.next()
+	// հրահանգը և արգումենտները
+	if p.look.token == xKeyword {
+		instr.name, _ = p.match(xKeyword)
+
+		if p.look.token == xNumber {
+			nv, _ := p.match(xNumber)
+			instr.number, _ = strconv.Atoi(nv)
+		} else if p.look.token == xIdent {
+			instr.symbol, _ = p.match(xIdent)
+		}
 	}
 
-	return instr
+	// տող ավարտող 'նոր տող' նիշը
+	_, err := p.match(xNewLine)
+	if err != nil {
+		return nil, err
+	}
+	for p.look.token == xNewLine {
+		p.match(xNewLine)
+	}
+
+	return instr, nil
+}
+
+func (p *parser) match(ex int) (string, error) {
+	if p.look.token == ex {
+		lex := p.look.value
+		p.next()
+		return lex, nil
+	}
+
+	return "", &parseError{0, "Վերլուծության սխալ։"}
 }
 
 // var keywords = map[string]int{
@@ -163,48 +183,49 @@ func isKeyword(si string) bool {
 }
 
 func (p *parser) next() {
-	for p.ch == ' ' || p.ch == '\t' || p.ch == '\r' {
-		p.read()
+	ch := p.read()
+
+	for ch == ' ' || ch == '\t' || ch == '\r' {
+		ch = p.read()
 	}
 
 	switch {
-	case p.ch == 0:
+	case ch == 0:
 		p.look = lexeme{xEos, "EOS"}
-	case p.ch == ';':
-		for p.ch != '\n' {
-			p.read()
+	case ch == ';':
+		for ch != '\n' {
+			ch = p.read()
 		}
+		p.source.UnreadRune()
 		p.next()
-	case p.ch == ':':
+	case ch == ':':
 		p.look = lexeme{xColon, ":"}
-		p.read()
-	case p.ch == '\n':
+	case ch == '\n':
 		p.look = lexeme{xNewLine, "NL"}
-		p.read()
-
-	case unicode.IsDigit(p.ch):
+	case unicode.IsDigit(ch):
 		p.look = lexeme{xNumber, ""}
-		for unicode.IsDigit(p.ch) {
-			p.look.value += string(p.ch)
-			p.read()
+		for unicode.IsDigit(ch) {
+			p.look.value += string(ch)
+			ch = p.read()
 		}
-	case unicode.IsLetter(p.ch):
+		p.source.UnreadRune()
+	case unicode.IsLetter(ch):
 		p.look = lexeme{xIdent, ""}
-		for unicode.IsLetter(p.ch) || unicode.IsDigit(p.ch) {
-			p.look.value += string(p.ch)
-			p.read()
+		for unicode.IsLetter(ch) || unicode.IsDigit(ch) {
+			p.look.value += string(ch)
+			ch = p.read()
 		}
+		p.source.UnreadRune()
 		if isKeyword(p.look.value) {
 			p.look.token = xKeyword
 		}
 	}
 }
 
-func (p *parser) read() {
+func (p *parser) read() rune {
 	ch, _, er := p.source.ReadRune()
 	if er != nil {
-		p.ch = 0
-	} else {
-		p.ch = ch
+		return 0
 	}
+	return ch
 }
