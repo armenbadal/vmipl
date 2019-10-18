@@ -68,11 +68,18 @@ func (p *parser) parseLine() (*instruction, error) {
 	if p.look.token == xKeyword {
 		instr.name, _ = p.match(xKeyword)
 
+		// առաջին արգումենտ
 		if p.look.token == xNumber {
 			nv, _ := p.match(xNumber)
-			instr.number, _ = strconv.Atoi(nv)
+			instr.number0, _ = strconv.Atoi(nv)
 		} else if p.look.token == xIdent {
 			instr.symbol, _ = p.match(xIdent)
+		}
+
+		// երկրորդ արգումենտ
+		if p.look.token == xNumber {
+			nv, _ := p.match(xNumber)
+			instr.number1, _ = strconv.Atoi(nv)
 		}
 	}
 
@@ -202,11 +209,10 @@ func (p *parser) next() {
 		p.look = lexeme{xColon, ":"}
 	case ch == '\n':
 		p.look = lexeme{xNewLine, "NL"}
-	case unicode.IsDigit(ch):
-		p.look = lexeme{xNumber, ""}
-		for unicode.IsDigit(ch) {
+	case unicode.IsDigit(ch) || ch == '-' || ch == '+':
+		p.look = lexeme{xNumber, string(ch)}
+		for ch = p.read(); unicode.IsDigit(ch); ch = p.read() {
 			p.look.value += string(ch)
-			ch = p.read()
 		}
 		p.source.UnreadRune()
 	case unicode.IsLetter(ch):
