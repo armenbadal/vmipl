@@ -3,7 +3,7 @@ package main
 import "github.com/armenbadal/vmipl/machine"
 
 func main() {
-	println("IPL VM\n------")
+	println("IPL VM\n======")
 	//assembler.Assemble("examples/ex0.am", "")
 
 	mc := machine.Create()
