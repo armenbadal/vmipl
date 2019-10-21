@@ -1,5 +1,6 @@
 package machine
 
+// Մեքենայի հրամանների անուները (կոդերը)
 const (
 	None = iota
 	Add
@@ -29,6 +30,7 @@ const (
 	Neg
 	Neq
 	New
+	Not
 	Or
 	Pop
 	Return
