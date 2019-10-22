@@ -3,14 +3,21 @@ package assembler
 import (
 	"bufio"
 	"container/list"
-	"sort"
 	"strconv"
 	"unicode"
+
+	"github.com/armenbadal/vmipl/bytecode"
 )
 
-type parser struct {
-	source *bufio.Reader
-	look   lexeme
+var source *bufio.Reader
+var look lexeme
+
+var addresses map[string]int
+var unresolved map[string]*list.List
+
+func init() {
+	addresses = make(map[string]int)
+	unresolved = make(map[string]*list.List)
 }
 
 type parseError struct {
@@ -33,117 +40,94 @@ func (er *parseError) Error() string {
 //             | KEYWORD INTEGER
 //             | KEYWORD IDENT .
 
-func (p *parser) parse() (*list.List, error) {
-	p.next()
+func parse(bc *bytecode.ByteCode) error {
+	next()
 
-	for p.look.token == xNewLine {
-		p.next()
+	for look.token == xNewLine {
+		next()
 	}
 
-	ast := list.New()
-	for p.look.token == xIdent || p.look.token == xKeyword {
-		el, err := p.parseLine()
-		if err != nil {
-			return nil, err
+	for look.token == xIdent || look.token == xKeyword {
+		if err := parseLine(bc); err != nil {
+			return err
 		}
-		ast.PushBack(el)
 	}
 
-	return ast, nil
+	// TODO handle unresolved links
+
+	return nil
 }
 
-func (p *parser) parseLine() (*instruction, error) {
-	instr := new(instruction)
-
+func parseLine(bc *bytecode.ByteCode) error {
 	// պիտակը
-	if p.look.token == xIdent {
-		instr.label, _ = p.match(xIdent)
-		_, err := p.match(xColon)
-		if err != nil {
-			return nil, err
+	if look.token == xIdent {
+		label, _ := match(xIdent)
+		if _, err := match(xColon); err != nil {
+			return err
 		}
+		addresses[label] = bc.Size()
 	}
 
 	// հրահանգը և արգումենտները
-	if p.look.token == xKeyword {
-		instr.name, _ = p.match(xKeyword)
+	if look.token == xKeyword {
+		nm, _ := match(xKeyword)
+		bc.AddByte(byte(indexOf(nm)))
 
 		// առաջին արգումենտ
-		if p.look.token == xNumber {
-			nv, _ := p.match(xNumber)
-			instr.number0, _ = strconv.Atoi(nv)
-		} else if p.look.token == xIdent {
-			instr.symbol, _ = p.match(xIdent)
+		if look.token == xNumber {
+			lex, _ := match(xNumber)
+			nv, _ := strconv.Atoi(lex)
+			bc.AddInteger(nv)
+		} else if look.token == xIdent {
+			label, _ := match(xIdent)
+			if addr, marked := addresses[label]; marked {
+				bc.AddInteger(addr)
+			} else {
+				if _, elis := unresolved[label]; !elis {
+					unresolved[label] = list.New()
+				}
+				unresolved[label].PushBack(bc.Size())
+			}
 		}
 
 		// երկրորդ արգումենտ
-		if p.look.token == xNumber {
-			nv, _ := p.match(xNumber)
-			instr.number1, _ = strconv.Atoi(nv)
+		if look.token == xNumber {
+			lex, _ := match(xNumber)
+			nv, _ := strconv.Atoi(lex)
+			bc.AddInteger(nv)
 		}
 	}
 
 	// տող ավարտող 'նոր տող' նիշը
-	_, err := p.match(xNewLine)
-	if err != nil {
-		return nil, err
+	if _, err := match(xNewLine); err != nil {
+		return err
 	}
-	for p.look.token == xNewLine {
-		p.match(xNewLine)
+	for look.token == xNewLine {
+		match(xNewLine)
 	}
 
-	return instr, nil
+	return nil
 }
 
-func (p *parser) match(ex int) (string, error) {
-	if p.look.token == ex {
-		lex := p.look.value
-		p.next()
+func put(n int, p []byte, i int) {
+	p[i+0] = byte(n)
+	p[i+1] = byte(n >> 8)
+	p[i+2] = byte(n >> 16)
+	p[i+3] = byte(n >> 24)
+}
+
+func match(ex int) (string, error) {
+	if look.token == ex {
+		lex := look.value
+		next()
 		return lex, nil
 	}
 
 	return "", &parseError{0, "Վերլուծության սխալ։"}
 }
 
-// var keywords = map[string]int{
-// 	"add":    xAdd,
-// 	"and":    xAnd,
-// 	"alloc":  xAlloc,
-// 	"call":   xCall,
-// 	"div":    xDiv,
-// 	"dup":    xDup,
-// 	"enter":  xEnter,
-// 	"eq":     xEq,
-// 	"geq":    xGeq,
-// 	"gr":     xGr,
-// 	"halt":   xHalt,
-// 	"jump":   xJump,
-// 	"jumpz":  xJumpz,
-// 	"jumpi":  xJumpi,
-// 	"leq":    xLeq,
-// 	"le":     xLe,
-// 	"load":   xLoad,
-// 	"loada":  xLoada,
-// 	"loadc":  xLoadc,
-// 	"loadr":  xLoadr,
-// 	"loadrc": xLoadrc,
-// 	"malloc": xMalloc,
-// 	"mark":   xMark,
-// 	"mul":    xMul,
-// 	"neg":    xNeg,
-// 	"neq":    xNeq,
-// 	"new":    xNew,
-// 	"or":     xOr,
-// 	"pop":    xPop,
-// 	"return": xReturn,
-// 	"slide":  xSlide,
-// 	"store":  xStore,
-// 	"storea": xStorea,
-// 	"storer": xStorer,
-// 	"sub":    xSub,
-// }
-
 var keywords = []string{
+	"none",
 	"add",
 	"and",
 	"alloc",
@@ -156,8 +140,8 @@ var keywords = []string{
 	"gr",
 	"halt",
 	"jump",
-	"jumpz",
 	"jumpi",
+	"jumpz",
 	"leq",
 	"le",
 	"load",
@@ -167,10 +151,12 @@ var keywords = []string{
 	"loadrc",
 	"malloc",
 	"mark",
+	"mod",
 	"mul",
 	"neg",
 	"neq",
 	"new",
+	"not",
 	"or",
 	"pop",
 	"return",
@@ -180,56 +166,59 @@ var keywords = []string{
 	"storer",
 	"sub"}
 
-func init() {
-	sort.Strings(keywords)
+func indexOf(kw string) int {
+	index := len(keywords) - 1
+	for index >= 0 && keywords[index] != kw {
+		index--
+	}
+	return index
 }
 
 func isKeyword(si string) bool {
-	k := sort.SearchStrings(keywords, si)
-	return keywords[k] == si
+	return indexOf(si) != -1
 }
 
-func (p *parser) next() {
-	ch := p.read()
+func next() {
+	ch := read()
 
 	for ch == ' ' || ch == '\t' || ch == '\r' {
-		ch = p.read()
+		ch = read()
 	}
 
 	switch {
 	case ch == 0:
-		p.look = lexeme{xEos, "EOS"}
+		look = lexeme{xEos, "EOS"}
 	case ch == ';':
 		for ch != '\n' {
-			ch = p.read()
+			ch = read()
 		}
-		p.source.UnreadRune()
-		p.next()
+		source.UnreadRune()
+		next()
 	case ch == ':':
-		p.look = lexeme{xColon, ":"}
+		look = lexeme{xColon, ":"}
 	case ch == '\n':
-		p.look = lexeme{xNewLine, "NL"}
+		look = lexeme{xNewLine, "NL"}
 	case unicode.IsDigit(ch) || ch == '-' || ch == '+':
-		p.look = lexeme{xNumber, string(ch)}
-		for ch = p.read(); unicode.IsDigit(ch); ch = p.read() {
-			p.look.value += string(ch)
+		look = lexeme{xNumber, string(ch)}
+		for ch = read(); unicode.IsDigit(ch); ch = read() {
+			look.value += string(ch)
 		}
-		p.source.UnreadRune()
+		source.UnreadRune()
 	case unicode.IsLetter(ch):
-		p.look = lexeme{xIdent, ""}
+		look = lexeme{xIdent, ""}
 		for unicode.IsLetter(ch) || unicode.IsDigit(ch) {
-			p.look.value += string(ch)
-			ch = p.read()
+			look.value += string(ch)
+			ch = read()
 		}
-		p.source.UnreadRune()
-		if isKeyword(p.look.value) {
-			p.look.token = xKeyword
+		source.UnreadRune()
+		if isKeyword(look.value) {
+			look.token = xKeyword
 		}
 	}
 }
 
-func (p *parser) read() rune {
-	ch, _, er := p.source.ReadRune()
+func read() rune {
+	ch, _, er := source.ReadRune()
 	if er != nil {
 		return 0
 	}

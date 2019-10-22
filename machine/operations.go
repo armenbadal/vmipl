@@ -15,8 +15,8 @@ const (
 	Gr
 	Halt
 	Jump
-	JumpZ
 	JumpI
+	JumpZ
 	Leq
 	Le
 	Load
@@ -56,8 +56,8 @@ var operations = []func(m *Machine){
 	doGr,
 	doHalt,
 	doJump,
-	doJumpZ,
 	doJumpI,
+	doJumpZ,
 	doLeq,
 	doLe,
 	doLoad,
@@ -93,7 +93,12 @@ func doAnd(m *Machine) {
 	m.binary(func(a, b int) int { return integer((a != 0) && (b != 0)) })
 }
 
-func doAlloc(m *Machine) {}
+func doAlloc(m *Machine) {
+	nv := getInteger(m.memory[m.pc : m.pc+4])
+	m.pc += 4
+
+	m.sp -= (nv * 4)
+}
 
 func doCall(m *Machine) {}
 
@@ -107,7 +112,13 @@ func doDup(m *Machine) {
 	m.push(n0)
 }
 
-func doEnter(m *Machine) {}
+func doEnter(m *Machine) {
+	nv := getInteger(m.memory[m.pc : m.pc+4])
+	m.pc += 4
+
+	m.ep = m.sp - (nv * 4)
+	//if (EP ≥ HP) error(“Stack Overflow”);
+}
 
 func doEq(m *Machine) {
 	m.binary(func(a, b int) int { return integer(a == b) })

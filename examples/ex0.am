@@ -2,11 +2,11 @@
 
 begin: enter
        loadc -777 
-       load  ; comment 2
+some:  load  ; comment 2
 
-       jump loop
+       jump some
         ; comment 3
 
-        slide 2 4
+       slide 2 4
 
        return

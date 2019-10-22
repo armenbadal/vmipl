@@ -2,7 +2,9 @@ package machine
 
 import "fmt"
 
-const sizeOfMemory = 1024
+// MemorySize հաստատունով տրվում է վիրտուալ մեքենայի
+// հիշասարքի չափը բայթերով։
+const MemorySize = 1024
 
 // Machine ...
 type Machine struct {
@@ -18,7 +20,7 @@ type Machine struct {
 // Create ...
 func Create() *Machine {
 	mc := new(Machine)
-	mc.memory = make([]byte, sizeOfMemory)
+	mc.memory = make([]byte, MemorySize)
 
 	return mc
 }
