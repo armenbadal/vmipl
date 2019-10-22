@@ -4,7 +4,9 @@ import "github.com/armenbadal/vmipl/assembler"
 
 func main() {
 	println("IPL VM\n======")
-	assembler.Assemble("examples/ex0.am")
+	bc := assembler.Assemble("examples/ex0.am")
+	bc.Dump()
+	bc.Write("examples/ex0.bc")
 
 	// mc := machine.Create()
 	// code := []byte{

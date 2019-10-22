@@ -61,9 +61,8 @@ func Assemble(src string) *bytecode.ByteCode {
 	if err := parse(bc); err != nil {
 		println(err.Error())
 	}
-	bc.Dump()
 
-	return nil
+	return bc
 }
 
 // Քերականաություն

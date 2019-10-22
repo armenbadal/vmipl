@@ -1,6 +1,9 @@
 package bytecode
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // ByteCode ...
 type ByteCode struct {
@@ -18,7 +21,16 @@ func New(cp int) *ByteCode {
 func (bc *ByteCode) Read(src string) {}
 
 // Write ...
-func (bc *ByteCode) Write(dest string) {}
+func (bc *ByteCode) Write(dest string) {
+	destFile, err := os.Create(dest)
+	if err != nil {
+		fmt.Println("Ֆայլը ստեղծելու սխալ։")
+		return
+	}
+	defer destFile.Close()
+
+	destFile.Write(bc.code)
+}
 
 // AddByte ...
 func (bc *ByteCode) AddByte(v byte) {
