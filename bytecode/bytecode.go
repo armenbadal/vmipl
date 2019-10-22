@@ -26,7 +26,9 @@ func (bc *ByteCode) AddByte(v byte) {
 }
 
 // AddInteger ...
-func (bc *ByteCode) AddInteger(v int) {}
+func (bc *ByteCode) AddInteger(v int) {
+	bc.code = append(bc.code, byte(v), byte(v>>8), byte(v>>16), byte(v>>24))
+}
 
 // Size ...
 func (bc *ByteCode) Size() int {
@@ -34,7 +36,12 @@ func (bc *ByteCode) Size() int {
 }
 
 // SetInteger ...
-func (bc *ByteCode) SetInteger(ix int) {}
+func (bc *ByteCode) SetInteger(ix int, v int) {
+	bc.code[ix] = byte(v)
+	bc.code[ix+1] = byte(v >> 8)
+	bc.code[ix+2] = byte(v >> 16)
+	bc.code[ix+3] = byte(v >> 24)
+}
 
 // Dump ...
 func (bc *ByteCode) Dump() {

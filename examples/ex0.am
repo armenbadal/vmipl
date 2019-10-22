@@ -1,12 +1,13 @@
 ; comment 1
 
 begin: enter
-       loadc -777 
+       loadc 777 
 some:  load  ; comment 2
 
        jump some
-        ; comment 3
+       ; comment 3
 
+       jump other
        slide 2 4
-
+other:
        return
