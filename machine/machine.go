@@ -14,32 +14,31 @@ type Machine struct {
 	pc int // program counter
 	sp int // stack pointer
 
-	memory []byte
+	program []byte
+	memory  []int
 }
 
 // Create ...
 func Create() *Machine {
 	mc := new(Machine)
-	mc.memory = make([]byte, MemorySize)
-
+	mc.program = make([]byte, MemorySize)
+	mc.memory = make([]int, MemorySize)
 	return mc
 }
 
 // Code ...
 func (m *Machine) Code(code []byte) {
-	for i := 0; i < len(code); i++ {
-		m.memory[i] = code[i]
-	}
+	copy(m.program, code)
 }
 
 // Execute ...
 func (m *Machine) Execute() {
 	m.pc = 0
-	m.sp = len(m.memory)
+	m.sp = -1
 
 	opcode := None
 	for opcode != Halt {
-		opcode = m.memory[m.pc]
+		opcode = m.program[m.pc]
 		m.pc++
 		operations[opcode](m)
 	}
@@ -55,21 +54,21 @@ func (m *Machine) binary(op func(a, b int) int) {
 }
 
 func (m *Machine) push(v int) {
-	m.sp -= 4
-	putInteger(v, m.memory[m.sp:m.sp+4])
+	m.sp++
+	m.memory[m.sp] = v
 }
 
 func (m *Machine) pop() int {
-	n := getInteger(m.memory[m.sp : m.sp+4])
-	m.sp += 4
+	n := m.memory[m.sp]
+	m.sp--
 	return n
 }
 
 func (m *Machine) printStack() {
 	fmt.Println("STACK\n-----")
 	c := 0
-	for i := m.sp; i < len(m.memory); i++ {
-		fmt.Printf("%02x ", m.memory[i])
+	for i := 0; i <= m.sp; i++ {
+		fmt.Printf("%08x ", m.memory[i])
 		c++
 		if c == 16 {
 			fmt.Println()

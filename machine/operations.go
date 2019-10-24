@@ -93,12 +93,7 @@ func doAnd(m *Machine) {
 	m.binary(func(a, b int) int { return integer((a != 0) && (b != 0)) })
 }
 
-func doAlloc(m *Machine) {
-	nv := getInteger(m.memory[m.pc : m.pc+4])
-	m.pc += 4
-
-	m.sp -= (nv * 4)
-}
+func doAlloc(m *Machine) {}
 
 func doCall(m *Machine) {}
 
@@ -112,13 +107,7 @@ func doDup(m *Machine) {
 	m.push(n0)
 }
 
-func doEnter(m *Machine) {
-	nv := getInteger(m.memory[m.pc : m.pc+4])
-	m.pc += 4
-
-	m.ep = m.sp - (nv * 4)
-	//if (EP ≥ HP) error(“Stack Overflow”);
-}
+func doEnter(m *Machine) {}
 
 func doEq(m *Machine) {
 	m.binary(func(a, b int) int { return integer(a == b) })
@@ -135,16 +124,16 @@ func doGr(m *Machine) {
 func doHalt(m *Machine) {}
 
 func doJump(m *Machine) {
-	m.pc = getInteger(m.memory[m.pc : m.pc+4])
+	m.pc = getInteger(m.program[m.pc : m.pc+4])
 }
 
 func doJumpI(m *Machine) {
-	m.pc = m.pop() + getInteger(m.memory[m.pc:m.pc+4])
+	m.pc = m.pop() + getInteger(m.program[m.pc:m.pc+4])
 }
 
 func doJumpZ(m *Machine) {
 	if n0 := m.pop(); n0 == 0 {
-		m.pc = getInteger(m.memory[m.pc : m.pc+4])
+		m.pc = getInteger(m.program[m.pc : m.pc+4])
 	}
 }
 
@@ -158,14 +147,14 @@ func doLe(m *Machine) {
 
 func doLoad(m *Machine) {
 	addr := m.pop()
-	vl := getInteger(m.memory[addr : addr+4])
+	vl := getInteger(m.program[addr : addr+4])
 	m.push(vl)
 }
 
 func doLoadA(m *Machine) {}
 
 func doLoadC(m *Machine) {
-	nv := getInteger(m.memory[m.pc : m.pc+4])
+	nv := getInteger(m.program[m.pc : m.pc+4])
 	m.pc += 4
 	m.push(nv)
 }
@@ -206,11 +195,7 @@ func doPop(m *Machine) {}
 
 func doReturn(m *Machine) {}
 
-func doSlide(m *Machine) {
-	addr := m.pop()
-	vl := m.pop()
-	putInteger(vl, m.memory[addr:addr+4])
-}
+func doSlide(m *Machine) {}
 
 func doStore(m *Machine) {}
 
