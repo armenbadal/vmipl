@@ -8,7 +8,6 @@ import (
 	"unicode"
 
 	"github.com/armenbadal/vmipl/bytecode"
-	"github.com/armenbadal/vmipl/machine"
 )
 
 const (
@@ -33,14 +32,6 @@ type lexeme struct {
 var source *bufio.Reader
 var look lexeme
 
-var addresses map[string]int
-var unresolved map[string]*list.List
-
-func init() {
-	addresses = make(map[string]int)
-	unresolved = make(map[string]*list.List)
-}
-
 type parseError struct {
 	line    int
 	message string
@@ -52,17 +43,18 @@ func (er *parseError) Error() string {
 
 // Assemble ֆունկցիան src ֆայլում գրված ծրագիրը թարգմանում է
 // կատարման համար պատրաստ բինար կոդի և գրում է dest ֆայլում։
-func Assemble(src string) *bytecode.ByteCode {
+func Assemble(src string) []byte {
 	srcFile, _ := os.Open(src)
 	defer srcFile.Close()
 
-	bc := bytecode.New(machine.MemorySize)
+	bc := bytecode.NewBuilder()
 	source = bufio.NewReader(srcFile)
 	if err := parse(bc); err != nil {
 		println(err.Error())
 	}
 
-	return bc
+	code, _ := bc.Bytes()
+	return code
 }
 
 // Քերականաություն
@@ -76,7 +68,7 @@ func Assemble(src string) *bytecode.ByteCode {
 //             | KEYWORD INTEGER
 //             | KEYWORD IDENT .
 
-func parse(bc *bytecode.ByteCode) error {
+func parse(bc *bytecode.Builder) error {
 	next()
 
 	for look.token == xNewLine {
@@ -89,29 +81,17 @@ func parse(bc *bytecode.ByteCode) error {
 		}
 	}
 
-	//
-	for k, v := range unresolved {
-		if addr, marked := addresses[k]; marked {
-			for el := v.Front(); el != nil; el = el.Next() {
-				place := el.Value.(int)
-				bc.SetInteger(place, addr)
-			}
-		} else {
-			return &parseError{0, "Անցում չսահմանված պիտակի։"}
-		}
-	}
-
 	return nil
 }
 
-func parseLine(bc *bytecode.ByteCode) error {
+func parseLine(bc *bytecode.Builder) error {
 	// պիտակը
 	if look.token == xIdent {
 		label, _ := match(xIdent)
 		if _, err := match(xColon); err != nil {
 			return err
 		}
-		addresses[label] = bc.Size()
+		bc.SetLabel(label)
 	}
 
 	// հրահանգը և արգումենտները

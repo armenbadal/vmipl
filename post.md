@@ -19,6 +19,90 @@ begin:
 Ասեմբլերի իմ իրականացումն (առայժմ) ունի երեք փաթեթ. `assembler`, `bytecode` և `machine`: `assembler` փաթեթում իրականացված է տեքստային լեզվի վերլուծությունն ու կոդի գեներացիան։ `bytecode` փաթեթում իրականացված են բայթ-կոդի կաոռւցման միջոցները։ `machine` փաթեթում իրականացված է վիրտուալ մեքենան՝ էմուլյատորը։
 
 
+## Ասեմբլերի լեզուն և դրա վերլուծությունը
+
+Վիրտուալ մեքենայի ծրագրերը տեքստային եղանակով ներկայացնելու համար օգտագործվում է մի պարզ լեզու, որի քերականությունը բերված է ստորև։
+
+````
+Program
+    = {NL} { Line NL{NL} } EOS.
+
+Line
+    = Label 
+    | Instruction
+    | Label Instruction.
+
+Label
+    = IDENT ':'.
+
+Instruction
+    = KEYWORD
+    | KEYWORD Argument
+    | KEYWORD Argument Argument.
+
+Argument
+    = INTEGER
+    | IDENT.
+````
+
+Քերականության տերմինալային սիմվոլներն են `NL`, `IDENT`, `KEYWORD`, `INTEGER`, `COLON` (`:`), `EOS`: Սրանց համապատասխան սահմանել եմ հաստատուններ.
+
+````Go
+const (
+	xNone = iota
+	xNumber
+	xIdent
+	xKeyword
+	xNewLine
+	xColon
+	xEos
+)
+````
+
+Բառային վերլուծիչը՝ իրականացված `next()` ֆունկցիայի տեսքով, կարդում է ծրագրի տեքստը և այն տրոհում է տերմինալային սիմվոլների (ընթացքում կարդալով ու դեն նետելով մեկնաբանությունները)։
+
+````Go
+func next() {
+	ch := read()
+
+	for ch == ' ' || ch == '\t' || ch == '\r' {
+		ch = read()
+	}
+
+	switch {
+	case ch == 0:
+		look = lexeme{xEos, "EOS"}
+	case ch == ';':
+		for ch != '\n' {
+			ch = read()
+		}
+		source.UnreadRune()
+		next()
+	case ch == ':':
+		look = lexeme{xColon, ":"}
+	case ch == '\n':
+		look = lexeme{xNewLine, "NL"}
+	case unicode.IsDigit(ch) || ch == '-' || ch == '+':
+		look = lexeme{xNumber, string(ch)}
+		for ch = read(); unicode.IsDigit(ch); ch = read() {
+			look.value += string(ch)
+		}
+		source.UnreadRune()
+	case unicode.IsLetter(ch):
+		look = lexeme{xIdent, ""}
+		for unicode.IsLetter(ch) || unicode.IsDigit(ch) {
+			look.value += string(ch)
+			ch = read()
+		}
+		source.UnreadRune()
+		if isKeyword(look.value) {
+			look.token = xKeyword
+		}
+	}
+}
+````
+
+
 ## Բայթ-կոդի ստեղծման միջոցները
 
 Բայթ-կոդի ստեղծումն ավելի հեշտացնելու համար իրականացրել եմ `bytecode` փաթեթը։ Սրա `Builder` օբյեկտը մեթոդներ է տրամադրում մեքենայի յուրաքանչյուր հրամանի գեներացիայի համար։ Բացի ամեն մի հրամանի սիմվոլիկ անունին և այդ հրամանի արգումենտներին բայթերի հաջորդականություն համապատասխանացնելը, `Builder` օբյեկ
