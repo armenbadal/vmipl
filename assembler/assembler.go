@@ -2,9 +2,7 @@ package assembler
 
 import (
 	"bufio"
-	"container/list"
 	"os"
-	"strconv"
 	"unicode"
 
 	"github.com/armenbadal/vmipl/bytecode"
@@ -94,36 +92,36 @@ func parseLine(bc *bytecode.Builder) error {
 		bc.SetLabel(label)
 	}
 
-	// հրահանգը և արգումենտները
-	if look.token == xKeyword {
-		nm, _ := match(xKeyword)
-		bc.AddByte(byte(indexOf(nm)))
+	// // հրահանգը և արգումենտները
+	// if look.token == xKeyword {
+	// 	nm, _ := match(xKeyword)
+	// 	bc.AddByte(byte(indexOf(nm)))
 
-		// առաջին արգումենտ
-		if look.token == xNumber {
-			lex, _ := match(xNumber)
-			nv, _ := strconv.Atoi(lex)
-			bc.AddInteger(nv)
-		} else if look.token == xIdent {
-			label, _ := match(xIdent)
-			if addr, marked := addresses[label]; marked {
-				bc.AddInteger(addr)
-			} else {
-				if _, elis := unresolved[label]; !elis {
-					unresolved[label] = list.New()
-				}
-				unresolved[label].PushBack(bc.Size())
-				bc.AddInteger(0)
-			}
-		}
+	// 	// առաջին արգումենտ
+	// 	if look.token == xNumber {
+	// 		lex, _ := match(xNumber)
+	// 		nv, _ := strconv.Atoi(lex)
+	// 		bc.AddInteger(nv)
+	// 	} else if look.token == xIdent {
+	// 		label, _ := match(xIdent)
+	// 		if addr, marked := addresses[label]; marked {
+	// 			bc.AddInteger(addr)
+	// 		} else {
+	// 			if _, elis := unresolved[label]; !elis {
+	// 				unresolved[label] = list.New()
+	// 			}
+	// 			unresolved[label].PushBack(bc.Size())
+	// 			bc.AddInteger(0)
+	// 		}
+	// 	}
 
-		// երկրորդ արգումենտ
-		if look.token == xNumber {
-			lex, _ := match(xNumber)
-			nv, _ := strconv.Atoi(lex)
-			bc.AddInteger(nv)
-		}
-	}
+	// 	// երկրորդ արգումենտ
+	// 	if look.token == xNumber {
+	// 		lex, _ := match(xNumber)
+	// 		nv, _ := strconv.Atoi(lex)
+	// 		bc.AddInteger(nv)
+	// 	}
+	// }
 
 	// տող ավարտող 'նոր տող' նիշը
 	if _, err := match(xNewLine); err != nil {

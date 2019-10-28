@@ -19,16 +19,14 @@ type Machine struct {
 }
 
 // Create ...
-func Create() *Machine {
+func Create(code []byte) *Machine {
 	mc := new(Machine)
 	mc.program = make([]byte, MemorySize)
 	mc.memory = make([]int, MemorySize)
-	return mc
-}
 
-// Code ...
-func (m *Machine) Code(code []byte) {
-	copy(m.program, code)
+	copy(mc.program, code)
+
+	return mc
 }
 
 // Execute ...

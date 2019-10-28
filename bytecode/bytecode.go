@@ -23,8 +23,8 @@ func NewBuilder() *Builder {
 	return builder
 }
 
-// Bytes ֆունկցիան վերադարձնում է կառուցված բայթ-կոդը, կամ ազդարարում է սխալի մասին
-func (bi *Builder) Bytes() ([]byte, error) {
+// Code ֆունկցիան վերադարձնում է կառուցված բայթ-կոդը, կամ ազդարարում է սխալի մասին
+func (bi *Builder) Code() ([]byte, error) {
 	if len(bi.unresolved) != 0 {
 		return nil, fmt.Errorf("Որոշ պիտակներ սահմանված չեն։")
 	}

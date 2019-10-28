@@ -1,6 +1,9 @@
 package main
 
-import "github.com/armenbadal/vmipl/machine"
+import (
+	"github.com/armenbadal/vmipl/bytecode"
+	"github.com/armenbadal/vmipl/machine"
+)
 
 func main() {
 	println("IPL VM\n======")
@@ -9,22 +12,17 @@ func main() {
 	// bc.Dump()
 	// bc.Write("examples/ex0.bc")
 
-	mc := machine.Create()
-	code := []byte{
-		machine.LoadC,
-		0x04, 0x00, 0x00, 0x00,
-		machine.LoadC,
-		0x02, 0x00, 0x00, 0x00,
-		machine.Add,
+	bb := bytecode.NewBuilder()
+	bb.LoadC(4)
+	bb.LoadC(2)
+	bb.Add()
+	bb.LoadC(0xFF)
+	bb.LoadC(0x01)
+	bb.Add()
+	bb.Halt()
 
-		machine.LoadC,
-		0xFF, 0x00, 0x00, 0x00,
-		machine.LoadC,
-		0x01, 0x00, 0x00, 0x00,
-		machine.Add,
-
-		machine.Halt,
+	if code, err := bb.Code(); err == nil {
+		mc := machine.Create(code)
+		mc.Execute()
 	}
-	mc.Code(code)
-	mc.Execute()
 }
