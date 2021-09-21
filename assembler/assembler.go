@@ -5,7 +5,7 @@ import (
 	"os"
 	"unicode"
 
-	"github.com/armenbadal/vmipl/bytecode"
+	"vmipl/bytecode"
 )
 
 const (
@@ -51,7 +51,7 @@ func Assemble(src string) []byte {
 		println(err.Error())
 	}
 
-	code, _ := bc.Bytes()
+	code, _ := bc.Code()
 	return code
 }
 

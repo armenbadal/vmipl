@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/armenbadal/vmipl/bytecode"
-	"github.com/armenbadal/vmipl/machine"
+	"vmipl/bytecode"
+	"vmipl/machine"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package bytecode
 import (
 	"fmt"
 
-	"github.com/armenbadal/vmipl/machine"
+	"vmipl/machine"
 )
 
 // Builder կառուցվածքն ապահովում է բայթ-կոդի գեներացիայի մեթոդներ
@@ -33,10 +33,14 @@ func (bi *Builder) Code() ([]byte, error) {
 }
 
 // Add գումարման գործողությունն է
-func (bi *Builder) Add() { bi.addByte(machine.Add) }
+func (bi *Builder) Add() {
+	bi.addByte(machine.Add)
+}
 
 // And կոնյունկցիայի գործողությունն է
-func (bi *Builder) And() { bi.addByte(machine.And) }
+func (bi *Builder) And() {
+	bi.addByte(machine.And)
+}
 
 // Alloc ֆունկցիայի պարամետրերի համար տեղ ռեզերվացնող հրամանն է
 func (bi *Builder) Alloc(n int) {
@@ -45,13 +49,19 @@ func (bi *Builder) Alloc(n int) {
 }
 
 // Call ֆունկցիայի կանչի հրամանն է
-func (bi *Builder) Call() { bi.addByte(machine.Call) }
+func (bi *Builder) Call() {
+	bi.addByte(machine.Call)
+}
 
 // Div բաժանման գործողությունն է
-func (bi *Builder) Div() { bi.addByte(machine.Div) }
+func (bi *Builder) Div() {
+	bi.addByte(machine.Div)
+}
 
 // Dup ստեկի գագաթի տարրը կրկնելու հրամանը
-func (bi *Builder) Dup() { bi.addByte(machine.Dup) }
+func (bi *Builder) Dup() {
+	bi.addByte(machine.Dup)
+}
 
 // Enter ...
 func (bi *Builder) Enter(n int) {
@@ -60,16 +70,24 @@ func (bi *Builder) Enter(n int) {
 }
 
 // Eq հավասրության ստուգման գործողությունն է
-func (bi *Builder) Eq() { bi.addByte(machine.Eq) }
+func (bi *Builder) Eq() {
+	bi.addByte(machine.Eq)
+}
 
 // Geq մեծ կամ հավասար լինելը ստուգող գործողությունն է
-func (bi *Builder) Geq() { bi.addByte(machine.Geq) }
+func (bi *Builder) Geq() {
+	bi.addByte(machine.Geq)
+}
 
 // Gr մեծ լինելը ստուգող գործողությունն է
-func (bi *Builder) Gr() { bi.addByte(machine.Gr) }
+func (bi *Builder) Gr() {
+	bi.addByte(machine.Gr)
+}
 
 // Halt աշխատանքի ավարտի հրամանն է
-func (bi *Builder) Halt() { bi.addByte(machine.Halt) }
+func (bi *Builder) Halt() {
+	bi.addByte(machine.Halt)
+}
 
 // Jump առանց պայմանի անցման հրամանն է
 func (bi *Builder) Jump(label string) {
@@ -135,10 +153,14 @@ func (bi *Builder) Neq() {}
 func (bi *Builder) New() {}
 
 // Not ժխտման գործողությունն է
-func (bi *Builder) Not() { bi.addByte(machine.Not) }
+func (bi *Builder) Not() {
+	bi.addByte(machine.Not)
+}
 
 // Or դիզյունկցիայի գործողությունն է
-func (bi *Builder) Or() { bi.addByte(machine.Or) }
+func (bi *Builder) Or() {
+	bi.addByte(machine.Or)
+}
 
 // Pop ...
 func (bi *Builder) Pop() {}
@@ -163,7 +185,9 @@ func (bi *Builder) StoreA() {}
 func (bi *Builder) StoreR() {}
 
 // Sub ...
-func (bi *Builder) Sub() { bi.addByte(machine.Sub) }
+func (bi *Builder) Sub() {
+	bi.addByte(machine.Sub)
+}
 
 // SetLabel ֆունկցիան կոդի գեներացիայի ընթացիկ հասցեն նշում է տրված պիտակով
 func (bi *Builder) SetLabel(label string) error {
